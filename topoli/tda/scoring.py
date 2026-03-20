@@ -27,7 +27,7 @@ def score_birth_death_gap(
 
     For each persistent feature, tokens incident to edges at the death scale
     (the critical edges that merge/kill the feature) score highest, weighted
-    by the feature's persistence.
+    by the feature's persistence. Fully vectorized for performance.
 
     Args:
         embeddings: (n_tokens, dim) array.
@@ -40,6 +40,9 @@ def score_birth_death_gap(
     """
     n_tokens = embeddings.shape[0]
     scores = np.zeros(n_tokens, dtype=np.float64)
+
+    upper_tri = np.triu_indices(n_tokens, k=1)
+    edge_dists = distance_matrix[upper_tri]
 
     for dim in homology_dims:
         if dim >= len(diagrams):
@@ -58,12 +61,13 @@ def score_birth_death_gap(
 
         for death, persistence in zip(deaths, persistences, strict=True):
             epsilon = 0.1 * persistence if persistence > 0 else 0.01
-            for i in range(n_tokens):
-                for j in range(i + 1, n_tokens):
-                    d_ij = distance_matrix[i, j]
-                    if abs(d_ij - death) < epsilon:
-                        scores[i] += persistence
-                        scores[j] += persistence
+            near_death = np.abs(edge_dists - death) < epsilon
+            edge_scores = near_death.astype(np.float64) * persistence
+
+            row_idx = upper_tri[0]
+            col_idx = upper_tri[1]
+            np.add.at(scores, row_idx, edge_scores)
+            np.add.at(scores, col_idx, edge_scores)
 
     return _normalize_scores(scores)
 
@@ -78,8 +82,8 @@ def score_representative_cycle(
     """Score tokens by membership in representative cocycles.
 
     Tokens appearing in cocycles of persistent features score higher.
-    Uses cocycle edge data from ripser: each cocycle entry is an array where
-    each row represents a simplex. For H1, rows are [vertex_i, vertex_j, coeff].
+    Weights by persistence^2 / cocycle_size to reward tokens in small,
+    highly persistent cycles (topologically distinctive).
 
     Args:
         embeddings: (n_tokens, dim) array.
@@ -117,7 +121,8 @@ def score_representative_cycle(
             vertex_indices = np.unique(cocycle_arr[:, :-1].flatten())
             valid = vertex_indices[vertex_indices < n_tokens]
             if len(valid) > 0:
-                np.add.at(scores, valid.astype(np.intp), persistence)
+                weight = persistence * persistence / len(valid)
+                np.add.at(scores, valid.astype(np.intp), weight)
 
     return _normalize_scores(scores)
 
@@ -128,10 +133,12 @@ def score_persistence_weighted(
     homology_dims: tuple[int, ...],
     distance_matrix: NDArray[np.float64],
 ) -> NDArray[np.float64]:
-    """Score tokens by persistence-weighted proximity to topological features.
+    """Score tokens by persistence-weighted proximity to critical edges.
 
-    For each persistent feature, score each token by how close its nearest-neighbor
-    distance is to the birth/death scale of that feature, weighted by persistence.
+    For each persistent feature, scores each token by how many of its edges
+    are near the death threshold — the critical scale where the topological
+    feature is destroyed. Bridge/boundary tokens have edges at unusual
+    intermediate distances near the death scale. Weighted by persistence.
 
     Args:
         embeddings: (n_tokens, dim) array.
@@ -158,11 +165,12 @@ def score_persistence_weighted(
             continue
 
         persistences = finite_dgm[:, 1] - finite_dgm[:, 0]
-        midpoints = (finite_dgm[:, 0] + finite_dgm[:, 1]) / 2.0
+        deaths = finite_dgm[:, 1]
 
-        min_dists = distance_matrix.min(axis=1)
-        for mid, p in zip(midpoints, persistences, strict=True):
-            proximity = 1.0 / (1.0 + np.abs(min_dists - mid))
-            scores += p * proximity
+        for death, persistence in zip(deaths, persistences, strict=True):
+            bandwidth = 0.2 * persistence if persistence > 0 else 0.01
+            proximity = np.exp(-((distance_matrix - death) ** 2) / (2 * bandwidth**2))
+            token_scores: NDArray[np.float64] = proximity.sum(axis=1)
+            scores += persistence * token_scores
 
     return _normalize_scores(scores)

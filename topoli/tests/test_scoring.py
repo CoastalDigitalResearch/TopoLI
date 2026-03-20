@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -142,6 +144,69 @@ class TestPersistenceWeighted:
         assert np.all(scores <= 1.0)
 
 
+class TestDiscriminationMargins:
+    """Strong discrimination between important and unimportant tokens."""
+
+    def test_birth_death_gap_bridge_ratio_above_5x(self) -> None:
+        emb = _barbell_embeddings()
+        result = compute_persistence_diagram(emb, max_dim=0)
+        scores = score_birth_death_gap(
+            emb,
+            result["diagrams"],
+            homology_dims=(0,),
+            distance_matrix=result["distance_matrix"],
+        )
+        bridge_mean = scores[30:33].mean()
+        cluster_mean = np.concatenate([scores[:30], scores[33:]]).mean()
+        ratio = bridge_mean / max(cluster_mean, 1e-9)
+        assert ratio > 5.0
+
+    def test_persistence_weighted_bridge_discrimination(self) -> None:
+        emb = _barbell_embeddings()
+        result = compute_persistence_diagram(emb, max_dim=0)
+        scores = score_persistence_weighted(
+            emb,
+            result["diagrams"],
+            homology_dims=(0,),
+            distance_matrix=result["distance_matrix"],
+        )
+        bridge_mean = scores[30:33].mean()
+        cluster_mean = np.concatenate([scores[:30], scores[33:]]).mean()
+        assert bridge_mean > cluster_mean
+
+    def test_birth_death_gap_vectorized_matches_shape(self) -> None:
+        rng = np.random.default_rng(42)
+        emb = rng.standard_normal((100, 32))
+        result = compute_persistence_diagram(emb, max_dim=1)
+        scores = score_birth_death_gap(
+            emb,
+            result["diagrams"],
+            homology_dims=(0, 1),
+            distance_matrix=result["distance_matrix"],
+        )
+        assert scores.shape == (100,)
+        assert np.all(scores >= 0.0)
+        assert np.all(scores <= 1.0)
+
+
+class TestPerformance:
+    """Scoring should be efficient on realistic sizes."""
+
+    def test_birth_death_gap_under_1s_for_180_tokens(self) -> None:
+        rng = np.random.default_rng(42)
+        emb = rng.standard_normal((180, 128))
+        result = compute_persistence_diagram(emb, max_dim=1)
+        t0 = time.monotonic()
+        score_birth_death_gap(
+            emb,
+            result["diagrams"],
+            homology_dims=(0, 1),
+            distance_matrix=result["distance_matrix"],
+        )
+        elapsed = time.monotonic() - t0
+        assert elapsed < 1.0
+
+
 class TestEdgeCases:
     """Edge cases for scoring functions."""
 
@@ -156,3 +221,27 @@ class TestEdgeCases:
             distance_matrix=result["distance_matrix"],
         )
         assert np.allclose(scores, 0.0)
+
+    def test_single_token_returns_zero(self) -> None:
+        emb = np.array([[1.0, 2.0, 3.0]])
+        result = compute_persistence_diagram(emb, max_dim=0)
+        scores = score_birth_death_gap(
+            emb,
+            result["diagrams"],
+            homology_dims=(0,),
+            distance_matrix=result["distance_matrix"],
+        )
+        assert scores.shape == (1,)
+
+    def test_all_scoring_functions_agree_on_zeros_for_no_features(self) -> None:
+        rng = np.random.default_rng(42)
+        emb = rng.standard_normal((5, 2))
+        result = compute_persistence_diagram(emb, max_dim=1)
+        dgms = result["diagrams"]
+        dm = result["distance_matrix"]
+        s1 = score_birth_death_gap(emb, dgms, (1,), dm)
+        s2 = score_representative_cycle(emb, dgms, result["cocycles"], (1,))
+        s3 = score_persistence_weighted(emb, dgms, (1,), dm)
+        assert np.allclose(s1, 0.0)
+        assert np.allclose(s2, 0.0)
+        assert np.allclose(s3, 0.0)
