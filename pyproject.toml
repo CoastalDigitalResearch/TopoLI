@@ -1,0 +1,67 @@
+[project]
+name = "topoli"
+version = "0.1.0"
+description = "Topological late-interaction retrieval with persistent homology pruning"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "ripser>=0.6",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-benchmark>=4.0",
+    "hypothesis>=6.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["topoli/tests"]
+strict = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D",       # pydocstyle — we use docstrings only on public symbols
+    "S101",    # assert in tests is fine
+    "PLR2004", # magic values in tests are fine
+    "T201",    # print statements
+    "FBT",     # boolean positional args
+    "COM812",  # trailing comma (conflicts with formatter)
+    "ISC001",  # single-line implicit string concat (conflicts with formatter)
+    "TC",      # type-checking imports — NDArray used at runtime with __future__ annotations
+]
+
+[tool.ruff.lint.per-file-ignores]
+"topoli/tests/*" = ["ANN", "PLR2004", "S101"]
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["ripser", "ripser.*", "scipy.*"]
+ignore_missing_imports = true
+follow_untyped_imports = true
+
+[[tool.mypy.overrides]]
+module = "topoli.tda.persistence"
+disallow_untyped_calls = false
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
