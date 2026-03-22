@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from topoli.data.query_generator import (
-    DOC2QUERY_PROMPT,
+    QUERY_TEMPLATES,
     QueryGeneratorConfig,
     build_prompt,
     parse_query_response,
+    parse_relevance_score,
 )
 from topoli.data.source_config import License, PassageRecord
 
@@ -27,7 +28,7 @@ class TestQueryGeneratorConfig:
 
     def test_default_model(self) -> None:
         cfg = QueryGeneratorConfig()
-        assert cfg.model_name == "Qwen/Qwen3-8B"
+        assert cfg.model_name == "Qwen/Qwen3.5-9B"
 
     def test_default_license(self) -> None:
         cfg = QueryGeneratorConfig()
@@ -59,12 +60,23 @@ class TestBuildPrompt:
         assert passage.text in prompt
 
     def test_contains_instruction(self) -> None:
-        prompt = build_prompt("Some text here.")
-        assert "search" in prompt.lower() or "query" in prompt.lower()
+        prompt = build_prompt("Some text here.", template_idx=0)
+        assert "query" in prompt.lower()
 
     def test_uses_template(self) -> None:
-        prompt = build_prompt("test text")
-        assert DOC2QUERY_PROMPT.split("{")[0].strip() in prompt
+        prompt = build_prompt("test text", template_idx=0)
+        assert QUERY_TEMPLATES[0].split("{")[0].strip() in prompt
+
+    def test_different_templates(self) -> None:
+        p0 = build_prompt("test text", template_idx=0)
+        p1 = build_prompt("test text", template_idx=1)
+        assert p0 != p1
+
+    def test_parse_relevance_score(self) -> None:
+        assert parse_relevance_score("4") == 4.0
+        assert parse_relevance_score("Score: 3") == 3.0
+        assert parse_relevance_score("") is None
+        assert parse_relevance_score("abc") is None
 
 
 class TestParseQueryResponse:

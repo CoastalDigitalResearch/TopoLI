@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-from topoli.data.query_generator import (
-    build_prompt,
-    parse_query_response,
-)
 from topoli.data.query_generator_impl import (
-    QueryBatch,
     QueryGenPipeline,
     batch_passages,
 )
@@ -65,6 +60,7 @@ class TestQueryGenPipeline:
             model_name="mock-model",
             model_license=License.APACHE_2_0,
             batch_size=2,
+            queries_per_passage=1,
         )
         results = pipeline.generate(passages)
         assert len(results) == 4
@@ -85,9 +81,10 @@ class TestQueryGenPipeline:
             model_license=License.APACHE_2_0,
             batch_size=4,
             min_query_tokens=3,
+            queries_per_passage=1,
         )
         results = pipeline.generate(passages)
-        assert len(results) == 2  # "hi" and "" filtered out
+        assert len(results) == 2
 
     def test_tracks_provenance(self) -> None:
         passages = _passages(2)
@@ -97,9 +94,10 @@ class TestQueryGenPipeline:
 
         pipeline = QueryGenPipeline(
             generate_fn=mock_generate,
-            model_name="Qwen/Qwen3-8B",
+            model_name="Qwen/Qwen3.5-9B",
             model_license=License.APACHE_2_0,
             batch_size=4,
+            queries_per_passage=1,
         )
         results = pipeline.generate(passages)
         for r in results:

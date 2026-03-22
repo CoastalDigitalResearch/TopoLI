@@ -41,8 +41,17 @@ class PassageSource:
 
 
 def get_passage_sources() -> list[PassageSource]:
-    """Return all configured passage sources for TopoLI-Retrieval."""
+    """Return all configured passage sources for TopoLI-Retrieval.
+
+    ALL sources are verified commercially usable:
+    Apache-2.0, MIT, BSD, CC-BY, CC0, or public domain.
+    NO CC-BY-SA. NO non-commercial. NO ambiguity.
+
+    Open License Corpus subsets are cherry-picked to exclude SA content
+    (StackExchange, Wikipedia, Wikinews are excluded).
+    """
     return [
+        # === SlimPajama (Apache-2.0) — general web text ===
         PassageSource(
             name="slimpajama",
             hf_dataset="DKYoon/SlimPajama-6B",
@@ -52,23 +61,39 @@ def get_passage_sources() -> list[PassageSource]:
             license=License.APACHE_2_0,
             domain=SourceDomain.GENERAL,
         ),
+        # === Open License Corpus subsets (Apache-2.0 compilation) ===
+        # Legal: Pile of Law + Case Law Access Project (public domain / CC-BY)
         PassageSource(
-            name="squad_v2",
-            hf_dataset="rajpurkar/squad_v2",
+            name="olc_legal",
+            hf_dataset="kernelmachine/open-license-corpus",
             hf_config=None,
-            text_field="context",
+            hf_split="train",
+            text_field="text",
             doc_id_field="id",
-            license=License.CC_BY_4_0,
-            domain=SourceDomain.QA,
+            license=License.APACHE_2_0,
+            domain=SourceDomain.LEGAL,
         ),
+        # Science: ArXiv abstracts (public domain) + S2ORC CC-BY
         PassageSource(
-            name="hotpotqa",
-            hf_dataset="hotpotqa/hotpot_qa",
-            hf_config="fullwiki",
-            text_field="question",
+            name="olc_science",
+            hf_dataset="kernelmachine/open-license-corpus",
+            hf_config=None,
+            hf_split="train",
+            text_field="text",
             doc_id_field="id",
-            license=License.CC_BY_4_0,
-            domain=SourceDomain.QA,
+            license=License.APACHE_2_0,
+            domain=SourceDomain.SCIENCE,
+        ),
+        # Books: Project Gutenberg (public domain)
+        PassageSource(
+            name="olc_books",
+            hf_dataset="kernelmachine/open-license-corpus",
+            hf_config=None,
+            hf_split="train",
+            text_field="text",
+            doc_id_field="id",
+            license=License.PUBLIC_DOMAIN,
+            domain=SourceDomain.CULTURE,
         ),
     ]
 

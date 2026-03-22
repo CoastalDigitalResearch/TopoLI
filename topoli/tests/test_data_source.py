@@ -106,20 +106,20 @@ class TestSourceRegistry:
         names = {s.name for s in registry}
         assert "triviaqa" in names
 
-    def test_contains_miracl(self) -> None:
+    def test_contains_olc_legal(self) -> None:
         registry = get_source_registry()
         names = {s.name for s in registry}
-        assert "miracl_en" in names
+        assert "olc_legal" in names
 
-    def test_contains_common_corpus_government(self) -> None:
+    def test_contains_olc_science(self) -> None:
         registry = get_source_registry()
         names = {s.name for s in registry}
-        assert "common_corpus_government" in names
+        assert "olc_science" in names
 
-    def test_contains_kl3m(self) -> None:
+    def test_contains_slimpajama(self) -> None:
         registry = get_source_registry()
         names = {s.name for s in registry}
-        assert "kl3m_government" in names
+        assert "slimpajama" in names
 
 
 class TestPassageRecord:

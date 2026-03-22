@@ -27,14 +27,27 @@ class QueryBatch:
 def batch_passages(
     passages: list[PassageRecord],
     batch_size: int = 32,
+    queries_per_passage: int = 1,
 ) -> list[QueryBatch]:
-    """Split passages into batches with pre-built prompts."""
-    batches: list[QueryBatch] = []
-    for i in range(0, len(passages), batch_size):
-        chunk = passages[i : i + batch_size]
-        prompts = [build_prompt(p.text) for p in chunk]
-        batches.append(QueryBatch(passages=chunk, prompts=prompts))
-    return batches
+    """Split passages into batches with pre-built prompts.
+
+    When queries_per_passage > 1, each passage gets multiple prompts
+    using different templates for diverse query generation.
+    """
+    expanded_passages: list[PassageRecord] = []
+    expanded_prompts: list[str] = []
+    for p in passages:
+        for template_idx in range(queries_per_passage):
+            expanded_passages.append(p)
+            expanded_prompts.append(build_prompt(p.text, template_idx=template_idx))
+
+    return [
+        QueryBatch(
+            passages=expanded_passages[i : i + batch_size],
+            prompts=expanded_prompts[i : i + batch_size],
+        )
+        for i in range(0, len(expanded_passages), batch_size)
+    ]
 
 
 @dataclass
@@ -49,16 +62,21 @@ class QueryGenPipeline:
     generate_fn: Callable[[list[str]], list[str]]
     model_name: str
     model_license: License
-    batch_size: int = 32
+    batch_size: int = 512
     min_query_tokens: int = 5
     max_query_tokens: int = 30
+    queries_per_passage: int = 2
 
     def generate(
         self,
         passages: list[PassageRecord],
     ) -> list[dict[str, str]]:
         """Generate queries for all passages."""
-        batches = batch_passages(passages, self.batch_size)
+        batches = batch_passages(
+            passages,
+            self.batch_size,
+            self.queries_per_passage,
+        )
         results: list[dict[str, str]] = []
 
         for batch_idx, batch in enumerate(batches):

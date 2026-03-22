@@ -96,7 +96,10 @@ class RetrievalPair(BaseModel):
 
 
 def get_source_registry() -> tuple[DataSourceConfig, ...]:
-    """Return all verified permissive data sources for TopoLI-Retrieval."""
+    """Return all verified permissive data sources for TopoLI-Retrieval.
+
+    ALL sources commercially usable. NO CC-BY-SA. NO non-commercial.
+    """
     return (
         # === Existing QA datasets (Apache-2.0) ===
         DataSourceConfig(
@@ -107,71 +110,57 @@ def get_source_registry() -> tuple[DataSourceConfig, ...]:
             description="95K factoid QA pairs from trivia questions",
             url="https://github.com/mandarjoshi90/triviaqa",
         ),
+        # === Open License Corpus (Apache-2.0 compilation) ===
+        # SA subsets (StackExchange, Wikipedia, Wikinews) excluded
         DataSourceConfig(
-            name="miracl_en",
-            huggingface_id="miracl/miracl",
+            name="olc_legal",
+            huggingface_id="kernelmachine/open-license-corpus",
             license=License.APACHE_2_0,
-            domain=SourceDomain.RETRIEVAL,
-            description="32K English retrieval queries with human annotations",
-            url="https://project-miracl.github.io/",
-        ),
-        # === Common Corpus subsets (CC-BY, CC0, public domain) ===
-        DataSourceConfig(
-            name="common_corpus_government",
-            huggingface_id="PleIAs/Common-Corpus",
-            license=License.CC0,
-            domain=SourceDomain.GOVERNMENT,
-            description=(
-                "US/EU government documents, legislation, regulations. "
-                "406B tokens. Public domain / CC0."
-            ),
-        ),
-        DataSourceConfig(
-            name="common_corpus_science",
-            huggingface_id="PleIAs/Common-Corpus",
-            license=License.CC_BY_4_0,
-            domain=SourceDomain.SCIENCE,
-            description=(
-                "ArXiv CC-BY papers, PubMed Central OA CC-BY subset. 281B tokens."
-            ),
-        ),
-        DataSourceConfig(
-            name="common_corpus_culture",
-            huggingface_id="PleIAs/Common-Corpus",
-            license=License.PUBLIC_DOMAIN,
-            domain=SourceDomain.CULTURE,
-            description=("Project Gutenberg, public domain books. 886B tokens."),
-        ),
-        # === KL3M (CC-BY 4.0, copyright-verified) ===
-        DataSourceConfig(
-            name="kl3m_government",
-            huggingface_id="alea-institute/kl3m-data-govinfo-crec",
-            license=License.CC_BY_4_0,
-            domain=SourceDomain.GOVERNMENT,
-            description=(
-                "Federal Register, CFR, Congressional Record. "
-                "Copyright-clean, legally verified."
-            ),
-            url="https://github.com/alea-institute/kl3m-data",
-        ),
-        DataSourceConfig(
-            name="kl3m_legal",
-            huggingface_id="alea-institute/kl3m-data-caselaw",
-            license=License.CC_BY_4_0,
             domain=SourceDomain.LEGAL,
             description=(
-                "US case law, court opinions, SEC filings. "
-                "Copyright-clean, legally verified."
+                "Pile of Law + Case Law Access Project. "
+                "6.5M court decisions, public domain / CC-BY."
             ),
-            url="https://github.com/alea-institute/kl3m-data",
+            url="https://huggingface.co/datasets/kernelmachine/open-license-corpus",
+        ),
+        DataSourceConfig(
+            name="olc_science",
+            huggingface_id="kernelmachine/open-license-corpus",
+            license=License.APACHE_2_0,
+            domain=SourceDomain.SCIENCE,
+            description=("ArXiv abstracts (public domain) + S2ORC CC-BY papers."),
+        ),
+        DataSourceConfig(
+            name="olc_books",
+            huggingface_id="kernelmachine/open-license-corpus",
+            license=License.PUBLIC_DOMAIN,
+            domain=SourceDomain.CULTURE,
+            description="Project Gutenberg public domain books.",
+        ),
+        DataSourceConfig(
+            name="olc_math",
+            huggingface_id="kernelmachine/open-license-corpus",
+            license=License.APACHE_2_0,
+            domain=SourceDomain.SCIENCE,
+            description="DeepMind Mathematics + AMPS datasets (Apache).",
+        ),
+        DataSourceConfig(
+            name="olc_conversation",
+            huggingface_id="kernelmachine/open-license-corpus",
+            license=License.APACHE_2_0,
+            domain=SourceDomain.GENERAL,
+            description=(
+                "HackerNews (MIT) + Ubuntu IRC (Apache). "
+                "Excludes CC-BY-SA StackExchange."
+            ),
         ),
         # === SlimPajama (Apache-2.0) ===
         DataSourceConfig(
             name="slimpajama",
-            huggingface_id="cerebras/SlimPajama-627B",
+            huggingface_id="DKYoon/SlimPajama-6B",
             license=License.APACHE_2_0,
             domain=SourceDomain.GENERAL,
-            description="627B tokens of cleaned web text. Apache-2.0.",
+            description="General web text. Apache-2.0.",
         ),
         # === Pre-training only ===
         DataSourceConfig(
