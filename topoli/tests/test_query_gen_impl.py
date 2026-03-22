@@ -53,7 +53,10 @@ class TestQueryGenPipeline:
         passages = _passages(4)
 
         def mock_generate(prompts: list[str]) -> list[str]:
-            return [f"what are the quarterly earnings reporting deadlines for passage {i}" for i in range(len(prompts))]
+            return [
+                f"what are the quarterly earnings reporting deadlines for passage {i}"
+                for i in range(len(prompts))
+            ]
 
         pipeline = QueryGenPipeline(
             generate_fn=mock_generate,
@@ -90,7 +93,10 @@ class TestQueryGenPipeline:
         passages = _passages(2)
 
         def mock_generate(prompts: list[str]) -> list[str]:
-            return ["what are quarterly earnings deadlines", "financial reporting requirements"]
+            return [
+                "what are quarterly earnings deadlines",
+                "financial reporting requirements",
+            ]
 
         pipeline = QueryGenPipeline(
             generate_fn=mock_generate,

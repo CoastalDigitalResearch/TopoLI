@@ -110,49 +110,44 @@ def get_source_registry() -> tuple[DataSourceConfig, ...]:
             description="95K factoid QA pairs from trivia questions",
             url="https://github.com/mandarjoshi90/triviaqa",
         ),
-        # === Open License Corpus (Apache-2.0 compilation) ===
-        # SA subsets (StackExchange, Wikipedia, Wikinews) excluded
+        # === Science ===
         DataSourceConfig(
-            name="olc_legal",
-            huggingface_id="kernelmachine/open-license-corpus",
-            license=License.APACHE_2_0,
-            domain=SourceDomain.LEGAL,
-            description=(
-                "Pile of Law + Case Law Access Project. "
-                "6.5M court decisions, public domain / CC-BY."
-            ),
-            url="https://huggingface.co/datasets/kernelmachine/open-license-corpus",
-        ),
-        DataSourceConfig(
-            name="olc_science",
-            huggingface_id="kernelmachine/open-license-corpus",
-            license=License.APACHE_2_0,
+            name="arxiv_science",
+            huggingface_id="ccdv/arxiv-summarization",
+            license=License.CC_BY_4_0,
             domain=SourceDomain.SCIENCE,
-            description=("ArXiv abstracts (public domain) + S2ORC CC-BY papers."),
+            description="ArXiv scientific papers (CC-BY).",
         ),
         DataSourceConfig(
-            name="olc_books",
-            huggingface_id="kernelmachine/open-license-corpus",
+            name="pubmed_science",
+            huggingface_id="ccdv/pubmed-summarization",
+            license=License.CC_BY_4_0,
+            domain=SourceDomain.SCIENCE,
+            description="PubMed biomedical abstracts (CC-BY / public domain).",
+        ),
+        # === Books ===
+        DataSourceConfig(
+            name="gutenberg_books",
+            huggingface_id="manu/project_gutenberg",
             license=License.PUBLIC_DOMAIN,
             domain=SourceDomain.CULTURE,
             description="Project Gutenberg public domain books.",
         ),
+        # === Math ===
         DataSourceConfig(
-            name="olc_math",
-            huggingface_id="kernelmachine/open-license-corpus",
-            license=License.APACHE_2_0,
+            name="open_web_math",
+            huggingface_id="open-web-math/open-web-math",
+            license=License.CC_BY_4_0,
             domain=SourceDomain.SCIENCE,
-            description="DeepMind Mathematics + AMPS datasets (Apache).",
+            description="Open Web Math (CC-BY).",
         ),
+        # === General web ===
         DataSourceConfig(
-            name="olc_conversation",
-            huggingface_id="kernelmachine/open-license-corpus",
-            license=License.APACHE_2_0,
+            name="c4_general",
+            huggingface_id="allenai/c4",
+            license=License.ODC_BY,
             domain=SourceDomain.GENERAL,
-            description=(
-                "HackerNews (MIT) + Ubuntu IRC (Apache). "
-                "Excludes CC-BY-SA StackExchange."
-            ),
+            description="C4 English web text (ODC-By).",
         ),
         # === SlimPajama (Apache-2.0) ===
         DataSourceConfig(

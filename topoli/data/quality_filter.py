@@ -182,10 +182,7 @@ def minhash_fingerprint(text: str, n_shingles: int = 3) -> str:
     shingles = {
         " ".join(words[i : i + n_shingles]) for i in range(len(words) - n_shingles + 1)
     }
-    min_hash = min(
-        hashlib.sha256(s.encode()).hexdigest()
-        for s in shingles
-    )
+    min_hash = min(hashlib.sha256(s.encode()).hexdigest() for s in shingles)
     return min_hash[:16]
 
 

@@ -52,8 +52,7 @@ class TestBM25NegativeMiner:
 
     def test_returns_passage_ids(self) -> None:
         passages = {
-            f"p{i}": f"document number {i} about topic {i % 3}"
-            for i in range(20)
+            f"p{i}": f"document number {i} about topic {i % 3}" for i in range(20)
         }
         miner = BM25NegativeMiner(passages)
         negatives = miner.mine(

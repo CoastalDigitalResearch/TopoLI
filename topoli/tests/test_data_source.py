@@ -106,15 +106,15 @@ class TestSourceRegistry:
         names = {s.name for s in registry}
         assert "triviaqa" in names
 
-    def test_contains_olc_legal(self) -> None:
+    def test_contains_arxiv(self) -> None:
         registry = get_source_registry()
         names = {s.name for s in registry}
-        assert "olc_legal" in names
+        assert "arxiv_science" in names
 
-    def test_contains_olc_science(self) -> None:
+    def test_contains_gutenberg(self) -> None:
         registry = get_source_registry()
         names = {s.name for s in registry}
-        assert "olc_science" in names
+        assert "gutenberg_books" in names
 
     def test_contains_slimpajama(self) -> None:
         registry = get_source_registry()

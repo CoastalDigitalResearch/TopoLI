@@ -61,39 +61,60 @@ def get_passage_sources() -> list[PassageSource]:
             license=License.APACHE_2_0,
             domain=SourceDomain.GENERAL,
         ),
-        # === Open License Corpus subsets (Apache-2.0 compilation) ===
-        # Legal: Pile of Law + Case Law Access Project (public domain / CC-BY)
+        # === Science: ArXiv papers (CC-BY via ccdv summarization corpus) ===
         PassageSource(
-            name="olc_legal",
-            hf_dataset="kernelmachine/open-license-corpus",
-            hf_config=None,
+            name="arxiv_science",
+            hf_dataset="ccdv/arxiv-summarization",
+            hf_config="document",
             hf_split="train",
-            text_field="text",
-            doc_id_field="id",
-            license=License.APACHE_2_0,
-            domain=SourceDomain.LEGAL,
-        ),
-        # Science: ArXiv abstracts (public domain) + S2ORC CC-BY
-        PassageSource(
-            name="olc_science",
-            hf_dataset="kernelmachine/open-license-corpus",
-            hf_config=None,
-            hf_split="train",
-            text_field="text",
-            doc_id_field="id",
-            license=License.APACHE_2_0,
+            text_field="article",
+            doc_id_field="abstract",
+            license=License.CC_BY_4_0,
             domain=SourceDomain.SCIENCE,
         ),
-        # Books: Project Gutenberg (public domain)
+        # === Science: PubMed abstracts (public domain / CC-BY) ===
         PassageSource(
-            name="olc_books",
-            hf_dataset="kernelmachine/open-license-corpus",
-            hf_config=None,
+            name="pubmed_science",
+            hf_dataset="ccdv/pubmed-summarization",
+            hf_config="document",
             hf_split="train",
+            text_field="article",
+            doc_id_field="abstract",
+            license=License.CC_BY_4_0,
+            domain=SourceDomain.SCIENCE,
+        ),
+        # === Books: Project Gutenberg (public domain) ===
+        PassageSource(
+            name="gutenberg_books",
+            hf_dataset="manu/project_gutenberg",
+            hf_config=None,
+            hf_split="en",
             text_field="text",
             doc_id_field="id",
             license=License.PUBLIC_DOMAIN,
             domain=SourceDomain.CULTURE,
+        ),
+        # === Math: Open Web Math (CC-BY via CommonCrawl) ===
+        PassageSource(
+            name="open_web_math",
+            hf_dataset="open-web-math/open-web-math",
+            hf_config=None,
+            hf_split="train",
+            text_field="text",
+            doc_id_field="url",
+            license=License.CC_BY_4_0,
+            domain=SourceDomain.SCIENCE,
+        ),
+        # === General: C4 English (ODC-By) ===
+        PassageSource(
+            name="c4_general",
+            hf_dataset="allenai/c4",
+            hf_config="en",
+            hf_split="train",
+            text_field="text",
+            doc_id_field="url",
+            license=License.ODC_BY,
+            domain=SourceDomain.GENERAL,
         ),
     ]
 
