@@ -235,7 +235,13 @@ def load_miracl_pairs(max_pairs: int = 30000) -> list[dict[str, str]]:
     from datasets import load_dataset  # type: ignore[attr-defined]
 
     logger.info("Loading MIRACL English (Apache-2.0)...")
-    ds = load_dataset("miracl/miracl", "en", split="train", streaming=True)
+    try:
+        ds = load_dataset("miracl/miracl", "en", split="train", streaming=True)
+    except (RuntimeError, Exception):  # noqa: BLE001
+        logger.warning(
+            "MIRACL dataset unavailable (script format not supported). Skipping."
+        )
+        return []
 
     pairs: list[dict[str, str]] = []
     for i, example in enumerate(ds):

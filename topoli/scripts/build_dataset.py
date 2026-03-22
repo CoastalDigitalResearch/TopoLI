@@ -110,9 +110,12 @@ def main() -> None:
 
     for source in get_passage_sources():
         logger.info("Loading from %s...", source.name)
-        passages = load_passages_from_hf(source, loader_config)
-        logger.info("  Got %d passages from %s", len(passages), source.name)
-        all_passages.extend(passages)
+        try:
+            passages = load_passages_from_hf(source, loader_config)
+            logger.info("  Got %d passages from %s", len(passages), source.name)
+            all_passages.extend(passages)
+        except Exception:  # noqa: BLE001
+            logger.exception("  FAILED to load %s, skipping", source.name)
 
     logger.info("Total passages extracted: %d", len(all_passages))
 
