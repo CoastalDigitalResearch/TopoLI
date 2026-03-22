@@ -115,27 +115,51 @@ def load_passages_from_hf(
         streaming=source.streaming,
     )
 
-    documents: list[dict[str, str]] = []
-    target = config.num_passages_per_source * 3
+    all_passages: list[PassageRecord] = []
+    batch: list[dict[str, str]] = []
+    batch_size = 1000
+    target = config.num_passages_per_source
 
     for i, example in enumerate(ds):
-        if i >= target:
+        if len(all_passages) >= target:
             break
         text = _extract_text(example, source.text_field)
         doc_id = _extract_text(example, source.doc_id_field) or f"{source.name}_{i}"
         if text and len(text) >= config.min_chars:
-            documents.append({"text": text, "doc_id": str(doc_id)})
+            batch.append({"text": text, "doc_id": str(doc_id)})
 
-    logger.info("Collected %d documents from %s", len(documents), source.name)
+        if len(batch) >= batch_size:
+            passages = load_passages_from_source(
+                documents=batch,
+                source_name=source.name,
+                source_license=source.license,
+                max_passages=target - len(all_passages),
+                min_chars=config.min_chars,
+                max_chars=config.max_chars,
+            )
+            all_passages.extend(passages)
+            batch = []
+            if i % 10000 == 0:
+                logger.info(
+                    "  %s: %d docs processed, %d passages so far",
+                    source.name,
+                    i,
+                    len(all_passages),
+                )
 
-    return load_passages_from_source(
-        documents=documents,
-        source_name=source.name,
-        source_license=source.license,
-        max_passages=config.num_passages_per_source,
-        min_chars=config.min_chars,
-        max_chars=config.max_chars,
-    )
+    if batch and len(all_passages) < target:
+        passages = load_passages_from_source(
+            documents=batch,
+            source_name=source.name,
+            source_license=source.license,
+            max_passages=target - len(all_passages),
+            min_chars=config.min_chars,
+            max_chars=config.max_chars,
+        )
+        all_passages.extend(passages)
+
+    logger.info("Extracted %d passages from %s", len(all_passages), source.name)
+    return all_passages[:target]
 
 
 def _extract_text(example: dict, field_path: str) -> str | None:  # type: ignore[type-arg]
