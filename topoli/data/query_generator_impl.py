@@ -98,16 +98,55 @@ class QueryGenPipeline:
         return results
 
 
+def build_vllm_generate_fn(
+    model_name: str = "Qwen/Qwen3.5-9B",
+    max_new_tokens: int = 64,
+    temperature: float = 0.7,
+    gpu_memory_utilization: float = 0.90,
+) -> Callable[[list[str]], list[str]]:
+    """Build a generate function using vLLM for high-throughput batch inference.
+
+    vLLM uses continuous batching, PagedAttention, and CUDA graphs for
+    3-5x faster throughput than naive HuggingFace generate().
+    """
+    from vllm import LLM, SamplingParams
+
+    logger.info(
+        "Loading %s with vLLM (gpu_mem=%.0f%%)...",
+        model_name,
+        gpu_memory_utilization * 100,
+    )
+    llm = LLM(
+        model=model_name,
+        dtype="bfloat16",
+        gpu_memory_utilization=gpu_memory_utilization,
+        max_model_len=1024,
+        trust_remote_code=True,
+    )
+    sampling_params = SamplingParams(
+        temperature=temperature,
+        max_tokens=max_new_tokens,
+        skip_special_tokens=True,
+    )
+    logger.info("vLLM engine ready: %s", model_name)
+
+    def generate(prompts: list[str]) -> list[str]:
+        outputs = llm.generate(prompts, sampling_params)
+        return [out.outputs[0].text.strip() for out in outputs]
+
+    return generate
+
+
 def build_hf_generate_fn(
-    model_name: str = "Qwen/Qwen3-8B",
+    model_name: str = "Qwen/Qwen3.5-9B",
     max_new_tokens: int = 64,
     temperature: float = 0.7,
 ) -> Callable[[list[str]], list[str]]:
-    """Build a generate function using a HuggingFace causal LM on GPU."""
+    """Build a generate function using HuggingFace (fallback if vLLM unavailable)."""
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    logger.info("Loading model %s...", model_name)
+    logger.info("Loading model %s (HF fallback)...", model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,

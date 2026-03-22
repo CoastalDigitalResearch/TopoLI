@@ -30,7 +30,11 @@ from topoli.data.loader import (
     load_triviaqa_pairs,
 )
 from topoli.data.quality_filter import deduplicate_queries, filter_pair
-from topoli.data.query_generator_impl import QueryGenPipeline, build_hf_generate_fn
+from topoli.data.query_generator_impl import (
+    QueryGenPipeline,
+    build_hf_generate_fn,
+    build_vllm_generate_fn,
+)
 from topoli.data.source_config import License, get_source_registry
 
 logger = logging.getLogger(__name__)
@@ -53,12 +57,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--query-model",
         type=str,
-        default="Qwen/Qwen3-8B",
+        default="Qwen/Qwen3.5-9B",
     )
     parser.add_argument(
         "--query-batch-size",
         type=int,
-        default=16,
+        default=512,
+        help="Batch size for query generation (controls prompt chunking)",
+    )
+    parser.add_argument(
+        "--no-vllm",
+        action="store_true",
+        help="Use HuggingFace generate instead of vLLM (slower)",
     )
     parser.add_argument(
         "--n-negatives",
@@ -114,7 +124,7 @@ def main() -> None:
             passages = load_passages_from_hf(source, loader_config)
             logger.info("  Got %d passages from %s", len(passages), source.name)
             all_passages.extend(passages)
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.exception("  FAILED to load %s, skipping", source.name)
 
     logger.info("Total passages extracted: %d", len(all_passages))
@@ -151,14 +161,25 @@ def main() -> None:
     if not args.skip_queries:
         logger.info("")
         logger.info("=" * 60)
-        logger.info("STEP 3: Generating queries with %s", args.query_model)
+        engine = "HuggingFace" if args.no_vllm else "vLLM"
+        logger.info(
+            "STEP 3: Generating queries with %s via %s", args.query_model, engine
+        )
         logger.info("=" * 60)
 
-        generate_fn = build_hf_generate_fn(
-            model_name=args.query_model,
-            max_new_tokens=64,
-            temperature=0.7,
-        )
+        if args.no_vllm:
+            generate_fn = build_hf_generate_fn(
+                model_name=args.query_model,
+                max_new_tokens=64,
+                temperature=0.7,
+            )
+        else:
+            generate_fn = build_vllm_generate_fn(
+                model_name=args.query_model,
+                max_new_tokens=64,
+                temperature=0.7,
+                gpu_memory_utilization=0.90,
+            )
         pipeline = QueryGenPipeline(
             generate_fn=generate_fn,
             model_name=args.query_model,
