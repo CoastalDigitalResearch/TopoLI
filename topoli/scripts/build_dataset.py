@@ -66,9 +66,9 @@ def parse_args() -> argparse.Namespace:
         help="Batch size for query generation (controls prompt chunking)",
     )
     parser.add_argument(
-        "--no-vllm",
+        "--vllm",
         action="store_true",
-        help="Use HuggingFace generate instead of vLLM (slower)",
+        help="Use vLLM for inference (requires native CUDA, not GPU-over-TCP)",
     )
     parser.add_argument(
         "--n-negatives",
@@ -161,36 +161,25 @@ def main() -> None:
     if not args.skip_queries:
         logger.info("")
         logger.info("=" * 60)
-        engine = "HuggingFace" if args.no_vllm else "vLLM"
+        engine = "vLLM" if args.vllm else "HuggingFace"
         logger.info(
             "STEP 3: Generating queries with %s via %s", args.query_model, engine
         )
         logger.info("=" * 60)
 
-        if args.no_vllm:
+        if args.vllm:
+            generate_fn = build_vllm_generate_fn(
+                model_name=args.query_model,
+                max_new_tokens=64,
+                temperature=0.7,
+                gpu_memory_utilization=0.90,
+            )
+        else:
             generate_fn = build_hf_generate_fn(
                 model_name=args.query_model,
                 max_new_tokens=64,
                 temperature=0.7,
             )
-        else:
-            try:
-                generate_fn = build_vllm_generate_fn(
-                    model_name=args.query_model,
-                    max_new_tokens=64,
-                    temperature=0.7,
-                    gpu_memory_utilization=0.90,
-                )
-            except Exception:
-                logger.exception(
-                    "vLLM failed to load %s, falling back to HuggingFace",
-                    args.query_model,
-                )
-                generate_fn = build_hf_generate_fn(
-                    model_name=args.query_model,
-                    max_new_tokens=64,
-                    temperature=0.7,
-                )
         pipeline = QueryGenPipeline(
             generate_fn=generate_fn,
             model_name=args.query_model,
