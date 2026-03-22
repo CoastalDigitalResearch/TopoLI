@@ -117,7 +117,7 @@ class QueryGenPipeline:
 
 
 def build_vllm_generate_fn(
-    model_name: str = "Qwen/Qwen3.5-9B",
+    model_name: str = "Qwen/Qwen3-8B",
     max_new_tokens: int = 64,
     temperature: float = 0.7,
     gpu_memory_utilization: float = 0.90,
@@ -156,7 +156,7 @@ def build_vllm_generate_fn(
 
 
 def build_hf_generate_fn(
-    model_name: str = "Qwen/Qwen3.5-9B",
+    model_name: str = "Qwen/Qwen3-8B",
     max_new_tokens: int = 64,
     temperature: float = 0.7,
 ) -> Callable[[list[str]], list[str]]:

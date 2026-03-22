@@ -57,7 +57,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--query-model",
         type=str,
-        default="Qwen/Qwen3.5-9B",
+        default="Qwen/Qwen3-8B",
     )
     parser.add_argument(
         "--query-batch-size",
@@ -174,12 +174,23 @@ def main() -> None:
                 temperature=0.7,
             )
         else:
-            generate_fn = build_vllm_generate_fn(
-                model_name=args.query_model,
-                max_new_tokens=64,
-                temperature=0.7,
-                gpu_memory_utilization=0.90,
-            )
+            try:
+                generate_fn = build_vllm_generate_fn(
+                    model_name=args.query_model,
+                    max_new_tokens=64,
+                    temperature=0.7,
+                    gpu_memory_utilization=0.90,
+                )
+            except Exception:
+                logger.exception(
+                    "vLLM failed to load %s, falling back to HuggingFace",
+                    args.query_model,
+                )
+                generate_fn = build_hf_generate_fn(
+                    model_name=args.query_model,
+                    max_new_tokens=64,
+                    temperature=0.7,
+                )
         pipeline = QueryGenPipeline(
             generate_fn=generate_fn,
             model_name=args.query_model,

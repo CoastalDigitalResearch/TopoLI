@@ -55,7 +55,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "topoli/tests/*" = ["ANN", "PLR2004", "S101", "S105", "NPY002", "PLC0415", "ARG", "ERA001", "E501", "PIE810", "RUF059"]
-"topoli/scripts/*" = ["ANN", "T201", "PLR0915", "C901"]
+"topoli/scripts/*" = ["ANN", "T201", "PLR0915", "PLR0912", "C901"]
 "topoli/data/loader.py" = ["PLC0415", "PLR0913"]
 "topoli/data/query_generator_impl.py" = ["PLC0415"]
 

@@ -28,7 +28,7 @@ class TestQueryGeneratorConfig:
 
     def test_default_model(self) -> None:
         cfg = QueryGeneratorConfig()
-        assert cfg.model_name == "Qwen/Qwen3.5-9B"
+        assert cfg.model_name == "Qwen/Qwen3-8B"
 
     def test_default_license(self) -> None:
         cfg = QueryGeneratorConfig()

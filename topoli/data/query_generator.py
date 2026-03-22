@@ -68,7 +68,7 @@ class QueryGeneratorConfig(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    model_name: str = "Qwen/Qwen3.5-9B"
+    model_name: str = "Qwen/Qwen3-8B"
     model_license: License = License.APACHE_2_0
     max_new_tokens: int = 64
     temperature: float = 0.7
