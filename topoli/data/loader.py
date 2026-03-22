@@ -44,31 +44,31 @@ def get_passage_sources() -> list[PassageSource]:
     """Return all configured passage sources for TopoLI-Retrieval."""
     return [
         PassageSource(
-            name="common_corpus_government",
-            hf_dataset="PleIAs/Common-Corpus",
-            hf_config="default",
-            text_field="text",
-            doc_id_field="id",
-            license=License.CC0,
-            domain=SourceDomain.GOVERNMENT,
-        ),
-        PassageSource(
-            name="kl3m_government",
-            hf_dataset="alea-institute/kl3m-data-govinfo-crec",
-            hf_config=None,
-            text_field="text",
-            doc_id_field="identifier",
-            license=License.CC_BY_4_0,
-            domain=SourceDomain.GOVERNMENT,
-        ),
-        PassageSource(
             name="slimpajama",
-            hf_dataset="cerebras/SlimPajama-627B",
+            hf_dataset="DKYoon/SlimPajama-6B",
             hf_config=None,
             text_field="text",
-            doc_id_field="meta",
+            doc_id_field="__index_level_0__",
             license=License.APACHE_2_0,
             domain=SourceDomain.GENERAL,
+        ),
+        PassageSource(
+            name="squad_v2",
+            hf_dataset="rajpurkar/squad_v2",
+            hf_config=None,
+            text_field="context",
+            doc_id_field="id",
+            license=License.CC_BY_4_0,
+            domain=SourceDomain.QA,
+        ),
+        PassageSource(
+            name="hotpotqa",
+            hf_dataset="hotpotqa/hotpot_qa",
+            hf_config="fullwiki",
+            text_field="question",
+            doc_id_field="id",
+            license=License.CC_BY_4_0,
+            domain=SourceDomain.QA,
         ),
     ]
 
@@ -113,7 +113,6 @@ def load_passages_from_hf(
         name=source.hf_config,
         split=source.hf_split,
         streaming=source.streaming,
-        trust_remote_code=True,
     )
 
     documents: list[dict[str, str]] = []
